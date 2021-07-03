@@ -1,18 +1,13 @@
-from __future__ import print_function
-import time
-import gc
-
-import numpy as np
 import tensorflow as tf
 from VGG16 import VGG16mo
-from utils.utils import *
+from utils import *
 import cv2
 from lap import lapjv
-from utils.shape_context import ShapeContext
-import matplotlib.pyplot as plt
+from shape_context import ShapeContext
+
 
 class CNN(object):
-    def __init__(self):
+    def __init__(self, npy_path):
         self.height = 224
         self.width = 224
         self.shape = np.array([224.0, 224.0])
@@ -30,7 +25,7 @@ class CNN(object):
         self.lambd = 0.5
 
         self.cnnph = tf.placeholder("float", [2, 224, 224, 3])
-        self.vgg = VGG16mo()
+        self.vgg = VGG16mo(npy_path)
         self.vgg.build(self.cnnph)
         self.SC = ShapeContext()
 
@@ -50,6 +45,8 @@ class CNN(object):
         IX = cv2.resize(IX, (self.height, self.width))
         IY = cv2.resize(IY, (self.height, self.width))
 
+        import matplotlib.pyplot as plt
+
         # CNN feature
         # propagate the images through VGG16
         IX = np.expand_dims(IX, axis=0)
@@ -60,6 +57,14 @@ class CNN(object):
             D1, D2, D3 = sess.run([
                 self.vgg.pool3, self.vgg.pool4, self.vgg.pool5_1
             ], feed_dict=feed_dict)
+
+        plt.imshow(cnn_input, interpolation='nearest')
+        plt.imshow(D1)
+        plt.show()
+
+        plt.imsave('1.png', D1)
+        plt.imsave('2.png', D2)
+        plt.imsave('3.png', D3)
 
         # flatten
         DX1, DY1 = np.reshape(D1[0], [-1, 256]), np.reshape(D1[1], [-1, 256])
@@ -184,5 +189,5 @@ class CNN(object):
             dQ = Q - Q_old
             itr = itr + 1
 
-        print('finish: itr %d, Q %d, tau %d' % (itr, Q, tau))
+        # print('finish: itr %d, Q %d, tau %d' % (itr, Q, tau))
         return ((X*224.0)+112.0)*Xscale, ((Y*224.0)+112.0)*Yscale, ((Z*224.0)+112.0)*Xscale

@@ -1,9 +1,7 @@
 import inspect
 import os
-
 import numpy as np
 import tensorflow as tf
-from utils.utils import gaussian_kernel
 
 VGG_MEAN = [103.939, 116.779, 123.68]
 
@@ -13,12 +11,11 @@ class VGG16mo:
         if vgg16_npy_path is None:
             path = inspect.getfile(VGG16mo)
             path = os.path.abspath(os.path.join(path, os.pardir))
-            path = os.path.join(path, "vgg16partial.npy")
+            path = os.path.join(path, "vgg16.npy")
             vgg16_npy_path = path
-            #print(path)
 
-        self.data_dict = np.load(vgg16_npy_path, encoding='latin1').item()
-        #print("npy file loaded")
+        self.data_dict = np.load(vgg16_npy_path, encoding='latin1', allow_pickle=True).item()
+
 
     def build(self, bgr):
         blue, green, red = tf.split(axis=3, num_or_size_splits=3, value=bgr)
@@ -55,7 +52,7 @@ class VGG16mo:
         self.conv5_1 = self.conv_layer(self.pool4, "conv5_1")
         self.pool5_1 = self.max_pool(self.conv5_1, 'pool5')
 
-        self.data_dict = None
+        self.data_dict = []
 
     def max_pool(self, bottom, name):
         return tf.nn.max_pool(bottom, ksize=[1, 2, 2, 1], strides=[1, 2, 2, 1], padding='SAME', name=name)
